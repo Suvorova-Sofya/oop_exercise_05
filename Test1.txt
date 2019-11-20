@@ -1,0 +1,8 @@
+pop
+no elements
+push 1 1 2 2 3 3 4 4 5 5
+pop
+1 1 2 2 3 3 4 4 5 5
+
+pop
+no elements
