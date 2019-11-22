@@ -119,8 +119,12 @@ namespace containers {
         } else {
             new_node->next = nullptr;
             if(end_node==nullptr) {
+                new_node->parent= nullptr;
+                new_node->next= nullptr;
                 queue<T>::root = std::move(new_node);
             }else{
+                new_node->parent=end_node;
+                new_node->next= nullptr;
                 end_node->next=std::move(new_node);
             }
         }
@@ -132,7 +136,6 @@ namespace containers {
         if (it.ptr_ == nullptr) {
             throw std::logic_error("erasing invalid iterator");
         }
-        node *parent = it.ptr_->parent;
         std::unique_ptr<node> &pointer_from_parent = [&]() -> std::unique_ptr<node> & {
             if (it.ptr_ == root.get()) {
                 return root;
@@ -140,10 +143,7 @@ namespace containers {
             return it.ptr_->parent->next;
         }();
         pointer_from_parent = std::move(it.ptr_->next);
-        if (pointer_from_parent) {
-            pointer_from_parent->parent = parent;
-            pointer_from_parent->next->parent=pointer_from_parent.get();
-        }
+
         end_node = end_help(root.get());
     }
 
