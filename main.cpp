@@ -31,9 +31,6 @@ int main() {
             std::cin >> g;
             long res=std::count_if(q.begin(),q.end(),[g](five_angles<double> f){ return f.square() < g;});
             std::cout << res << "\n";
-        }else if(strcmp(str,"all")==0){
-            std::for_each(q.begin(),q.end(),[](five_angles<double> f){f.print(); });
-            std::cout<< "\n";
         }else if(strcmp(str,"erase")==0){
             int r;
             std::cin >>r;
@@ -48,6 +45,9 @@ int main() {
             std::cin >>r;
             five_angles<double> five_angle(std::cin);
             q.insert(q.begin() + r,five_angle);
+        }else if(strcmp(str,"all")==0){
+            std::for_each(q.begin(),q.end(),[](five_angles<double> f){f.print(); });
+            std::cout<< "\n";
         }
 
     }

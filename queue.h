@@ -142,6 +142,7 @@ namespace containers {
         pointer_from_parent = std::move(it.ptr_->next);
         if (pointer_from_parent) {
             pointer_from_parent->parent = parent;
+            pointer_from_parent->next->parent=pointer_from_parent.get();
         }
         end_node = end_help(root.get());
     }
