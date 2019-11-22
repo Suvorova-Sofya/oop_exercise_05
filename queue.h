@@ -32,7 +32,7 @@ namespace containers {
 
             forward_iterator &operator++();
 
-            forward_iterator operator++(int);
+            forward_iterator operator+(int r);
 
             bool operator==(const forward_iterator &o) const;
 
@@ -53,17 +53,17 @@ namespace containers {
 
         void erase(const forward_iterator &it);
 
-        T pop();
+        void pop();
 
         void push(const T &value);
 
-        T top();
+        T front();
 
+
+    private:
         node *end_node = nullptr;
 
         node *end_help(node *ptr);
-
-    private:
 
         struct node {
             T value;
@@ -94,8 +94,6 @@ namespace containers {
             return nullptr;
         }
         forward_iterator it(root.get());
-        it.ptr_->parent= nullptr;
-        it.ptr_->next=std::move(root->next);
         return it;
     }
 
@@ -107,18 +105,26 @@ namespace containers {
     template<class T>
     void queue<T>::insert(const queue<T>::forward_iterator &it, const T &value) {
         std::unique_ptr<node> new_node(new node{value});
-        new_node->parent=it.ptr_;
-        if(it.ptr_) {
-            new_node->next = std::move(it.ptr_->next);
-            if (it.ptr_->next) {
-                it.ptr_->next->parent = new_node.get();
+        if (it != nullptr) {
+            node *ptr = it.ptr_->parent;
+            new_node->parent = it.ptr_->parent;
+            it.ptr_->parent = new_node.get();
+            if (ptr) {
+                new_node->next = std::move(ptr->next);
+                ptr->next = std::move(new_node);
+            } else {
+                new_node->next = std::move(root);
+                root = std::move(new_node);
             }
-            it.ptr_->next=std::move(new_node);
-        }else{
-            new_node->next= nullptr;
-            queue<T>::root=std::move(new_node);
+        } else {
+            new_node->next = nullptr;
+            if(end_node==nullptr) {
+                queue<T>::root = std::move(new_node);
+            }else{
+                end_node->next=std::move(new_node);
+            }
         }
-        end_node=end_help(root.get());
+        end_node = end_help(root.get());
     }
 
     template<class T>
@@ -128,7 +134,7 @@ namespace containers {
         }
         node *parent = it.ptr_->parent;
         std::unique_ptr<node> &pointer_from_parent = [&]() -> std::unique_ptr<node> & {
-            if(it.ptr_ == root.get()){
+            if (it.ptr_ == root.get()) {
                 return root;
             }
             return it.ptr_->parent->next;
@@ -137,13 +143,14 @@ namespace containers {
         if (pointer_from_parent) {
             pointer_from_parent->parent = parent;
         }
-        end_node=end_help(root.get());
+        end_node = end_help(root.get());
     }
 
 //
     template<class T>
     typename queue<T>::forward_iterator queue<T>::node::nextf() {
-        return this->next.get();
+        forward_iterator result(this->next.get());
+        return result;
     }
 
     template<class T>
@@ -156,15 +163,20 @@ namespace containers {
 
     template<class T>
     typename queue<T>::forward_iterator &queue<T>::forward_iterator::operator++() {
-        *this = ptr_->nextf();
-        return *this;
+        if (*this != nullptr) {
+            *this = ptr_->nextf();
+            return *this;
+        } else {
+            throw std::logic_error("invalid iterator");
+        }
     }
 
     template<class T>
-    typename queue<T>::forward_iterator queue<T>::forward_iterator::operator++(int) {
-        forward_iterator old = *this;
-        ++*this;
-        return old;
+    typename queue<T>::forward_iterator queue<T>::forward_iterator::operator+(int r) {
+        for (int i = 0; i < r; ++i) {
+            ++*this;
+        }
+        return *this;
     }
 
     template<class T>
@@ -178,7 +190,7 @@ namespace containers {
     }
 
     template<class T>
-    T queue<T>::top() {
+    T queue<T>::front() {
         if (queue<T>::root == nullptr) {
             throw std::logic_error("no elements");
         }
@@ -186,19 +198,25 @@ namespace containers {
     }
 
     template<class T>
-    T queue<T>::pop() {
+    void queue<T>::pop() {
         if (queue<T>::root == nullptr) {
             throw std::logic_error("no elements");
         }
-        T result = queue<T>::root->value;
         erase(queue<T>::begin());
-        return result;
     }
 
     template<class T>
     void queue<T>::push(const T &value) {
         forward_iterator it(end_node);
-        insert(it,value);
+        std::unique_ptr<node> new_node(new node{value});
+        if (it.ptr_) {
+            new_node->parent = it.ptr_;
+            it.ptr_->next = std::move(new_node);
+        } else {
+            new_node->next = nullptr;
+            queue<T>::root = std::move(new_node);
+        }
+        queue<T>::end_node = end_help(root.get());
     }
 
 }
